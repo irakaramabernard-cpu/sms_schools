@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Student Management System</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --background: #f3f4f6;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--background); color: var(--text); padding: 20px; margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        header h1 { margin: 0; }
+        .logout-btn { background-color: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .logout-btn:hover { background-color: #dc2626; }
+        .card { background: var(--surface); padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a { display: inline-block; padding: 10px 15px; margin-right: 10px; background-color: #e5e7eb; color: var(--text); text-decoration: none; border-radius: 6px; font-weight: 500; }
+        .nav-links a:hover { background-color: var(--primary); color: white; }
+        .nav-links a.active { background-color: var(--primary); color: white; }
+        h2 { margin-top: 0; border-bottom: 2px solid var(--background); padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
+        button { padding: 10px 20px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: var(--primary-hover); }
+        .btn-success { background-color: var(--success); }
+        .btn-success:hover { background-color: #059669; }
+        .btn-export { background-color: var(--warning); }
+        .btn-export:hover { background-color: #d97706; }
+        table { width: 100%; border-collapse: collapse; background: var(--surface); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #f9fafb; }
+        .report-filters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        @media (max-width: 768px) { .report-filters { grid-template-columns: 1fr; } }
+        .report-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .report-card h3 { margin: 0 0 10px 0; }
+        .report-card p { margin: 5px 0; font-size: 0.9rem; }
+        .report-card button { background-color: rgba(255,255,255,0.3); margin-top: 10px; }
+        .report-card button:hover { background-color: rgba(255,255,255,0.5); }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .badge-info { background-color: #dbeafe; color: #1e40af; }
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+        .badge-warning { background-color: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📊 Reports & Analytics</h1>
+        <div style="text-align: right;">
+            <p style="margin-bottom: 10px; color: #6b7280;">Welcome, <strong id="username">User</strong></p>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-links">
+        <a href="index.html">Dashboard</a>
+        <a href="attendance.html">Attendance Report</a>
+        <a href="classes.html">Classes</a>
+        <a href="reports.html" class="active">Reports</a>
+    </div>
+
+    <!-- Quick Report Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div class="report-card">
+            <h3>📋 Student Enrollment Report</h3>
+            <p>View all students organized by grade level and course</p>
+            <button class="btn-success" onclick="generateEnrollmentReport()">Generate Report</button>
+        </div>
+        <div class="report-card">
+            <h3>📅 Attendance Summary</h3>
+            <p>Attendance percentage and trends by date range</p>
+            <button class="btn-success" onclick="generateAttendanceReport()">Generate Report</button>
+        </div>
+        <div class="report-card">
+            <h3>👥 Class Statistics</h3>
+            <p>Total students per grade and demographics</p>
+            <button class="btn-success" onclick="generateClassReport()">Generate Report</button>
+        </div>
+        <div class="report-card">
+            <h3>📈 Performance Metrics</h3>
+            <p>Student performance and grade distribution</p>
+            <button class="btn-success" onclick="generatePerformanceReport()">Generate Report</button>
+        </div>
+        <div class="report-card">
+            <h3>🎯 Subject Enrollment</h3>
+            <p>Students enrolled in each subject by grade</p>
+            <button class="btn-success" onclick="generateSubjectReport()">Generate Report</button>
+        </div>
+        <div class="report-card">
+            <h3>📊 Comprehensive Report</h3>
+            <p>All data combined with filters and export options</p>
+            <button class="btn-success" onclick="generateComprehensiveReport()">Generate Report</button>
+        </div>
+    </div>
+
+    <!-- Student Enrollment Report -->
+    <div class="card" id="enrollmentReportSection" style="display: none;">
+        <h2>📋 Student Enrollment Report</h2>
+        <div class="report-filters">
+            <div class="form-group">
+                <label for="enrollmentGrade">Grade Level</label>
+                <select id="enrollmentGrade">
+                    <option value="">All Grades</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="enrollmentCourse">Course</label>
+                <select id="enrollmentCourse">
+                    <option value="">All Courses</option>
+                </select>
+            </div>
+            <div style="text-align: right; padding-top: 25px;">
+                <button class="btn-export" onclick="exportReport('enrollment')">Export to PDF</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Grade</th>
+                    <th>Course</th>
+                </tr>
+            </thead>
+            <tbody id="enrollmentTable">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Attendance Summary Report -->
+    <div class="card" id="attendanceReportSection" style="display: none;">
+        <h2>📅 Attendance Summary Report</h2>
+        <div class="report-filters">
+            <div class="form-group">
+                <label for="attendanceStartDate">From Date</label>
+                <input type="date" id="attendanceStartDate">
+            </div>
+            <div class="form-group">
+                <label for="attendanceEndDate">To Date</label>
+                <input type="date" id="attendanceEndDate">
+            </div>
+            <div style="text-align: right; padding-top: 25px;">
+                <button class="btn-export" onclick="exportReport('attendance')">Export to PDF</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Total Days</th>
+                    <th>Present Days</th>
+                    <th>Absent Days</th>
+                    <th>Attendance %</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceTable">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Class Statistics Report -->
+    <div class="card" id="classReportSection" style="display: none;">
+        <h2>👥 Class Statistics Report</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Grade Level</th>
+                    <th>Total Students</th>
+                    <th>Male</th>
+                    <th>Female</th>
+                    <th>Avg Attendance %</th>
+                </tr>
+            </thead>
+            <tbody id="classStatsTable">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Performance Report -->
+    <div class="card" id="performanceReportSection" style="display: none;">
+        <h2>📈 Performance Report</h2>
+        <div class="report-filters">
+            <div class="form-group">
+                <label for="performanceGrade">Grade Level</label>
+                <select id="performanceGrade">
+                    <option value="">All Grades</option>
+                </select>
+            </div>
+            <div style="text-align: right; padding-top: 25px;">
+                <button class="btn-export" onclick="exportReport('performance')">Export to PDF</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Grade Level</th>
+                    <th>Marks</th>
+                    <th>Grade</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="performanceTable">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Subject Enrollment Report -->
+    <div class="card" id="subjectReportSection" style="display: none;">
+        <h2>🎯 Subject Enrollment Report</h2>
+        <div class="report-filters">
+            <div class="form-group">
+                <label for="subjectGrade">Grade Level</label>
+                <select id="subjectGrade">
+                    <option value="">All Grades</option>
+                </select>
+            </div>
+            <div style="text-align: right; padding-top: 25px;">
+                <button class="btn-export" onclick="exportReport('subject')">Export to PDF</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Grade Level</th>
+                    <th>Students Enrolled</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="subjectTable">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const GRADE_LEVELS = [
+        'Lower Primary Grade 1', 'Lower Primary Grade 2', 'Lower Primary Grade 3',
+        'Upper Primary Grade 4', 'Upper Primary Grade 5', 'Upper Primary Grade 6',
+        'O-Level Grade 7', 'O-Level Grade 8', 'O-Level Grade 9', 'O-Level Grade 10', 'O-Level Grade 11',
+        'A-Level Grade 12', 'A-Level Grade 13'
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        checkLogin();
+        loadGradeFilters();
+    });
+
+    async function checkLogin() {
+        try {
+            const response = await fetch('login_api.php');
+            const result = await response.json();
+            
+            if (!result.logged_in) {
+                window.location.href = 'login.html';
+            } else {
+                document.getElementById('username').textContent = result.username;
+            }
+        } catch (error) {
+            console.error('Error checking login:', error);
+            window.location.href = 'login.html';
+        }
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            fetch('logout.php').then(() => {
+                window.location.href = 'login.html';
+            });
+        }
+    }
+
+    function loadGradeFilters() {
+        const selects = ['enrollmentGrade', 'performanceGrade', 'subjectGrade'];
+        selects.forEach(selectId => {
+            const select = document.getElementById(selectId);
+            GRADE_LEVELS.forEach(grade => {
+                const option = document.createElement('option');
+                option.value = grade;
+                option.textContent = grade;
+                select.appendChild(option);
+            });
+        });
+
+        // Set default dates for attendance report
+        const today = new Date();
+        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+        document.getElementById('attendanceStartDate').value = lastMonth.toISOString().split('T')[0];
+        document.getElementById('attendanceEndDate').value = today.toISOString().split('T')[0];
+    }
+
+    function generateEnrollmentReport() {
+        document.getElementById('enrollmentReportSection').style.display = 'block';
+        loadEnrollmentData();
+    }
+
+    function generateAttendanceReport() {
+        document.getElementById('attendanceReportSection').style.display = 'block';
+        loadAttendanceData();
+    }
+
+    function generateClassReport() {
+        document.getElementById('classReportSection').style.display = 'block';
+        loadClassData();
+    }
+
+    function generatePerformanceReport() {
+        document.getElementById('performanceReportSection').style.display = 'block';
+        loadPerformanceData();
+    }
+
+    function generateSubjectReport() {
+        document.getElementById('subjectReportSection').style.display = 'block';
+        loadSubjectData();
+    }
+
+    function generateComprehensiveReport() {
+        document.querySelectorAll('.card').forEach(card => {
+            if (card.id && card.id.includes('ReportSection')) {
+                card.style.display = 'block';
+            }
+        });
+    }
+
+    function loadEnrollmentData() {
+        const table = document.getElementById('enrollmentTable');
+        table.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading data...</td></tr>';
+        // In production, fetch from API
+        setTimeout(() => {
+            table.innerHTML = '<tr><td colspan="5" style="text-align:center;">No students found</td></tr>';
+        }, 500);
+    }
+
+    function loadAttendanceData() {
+        const table = document.getElementById('attendanceTable');
+        table.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading data...</td></tr>';
+        setTimeout(() => {
+            table.innerHTML = '<tr><td colspan="5" style="text-align:center;">No attendance data found</td></tr>';
+        }, 500);
+    }
+
+    function loadClassData() {
+        const table = document.getElementById('classStatsTable');
+        table.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading data...</td></tr>';
+        setTimeout(() => {
+            table.innerHTML = '<tr><td colspan="5" style="text-align:center;">No class data found</td></tr>';
+        }, 500);
+    }
+
+    function loadPerformanceData() {
+        const table = document.getElementById('performanceTable');
+        table.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading data...</td></tr>';
+        setTimeout(() => {
+            table.innerHTML = '<tr><td colspan="5" style="text-align:center;">No performance data found</td></tr>';
+        }, 500);
+    }
+
+    function loadSubjectData() {
+        const table = document.getElementById('subjectTable');
+        table.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading data...</td></tr>';
+        setTimeout(() => {
+            table.innerHTML = '<tr><td colspan="4" style="text-align:center;">No subject data found</td></tr>';
+        }, 500);
+    }
+
+    function exportReport(reportType) {
+        alert('Export functionality for ' + reportType + ' report would generate a PDF here.');
+        // In production, implement PDF export using a library like jsPDF or similar
+    }
+</script>
+
+</body>
+</html>

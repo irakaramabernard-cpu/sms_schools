@@ -1,0 +1,305 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management System</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --background: #f3f4f6;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --danger: #ef4444;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--background); color: var(--text); padding: 20px; margin: 0; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { margin: 0; }
+        header p { margin: 5px 0 0 0; }
+        .main-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        @media (max-width: 768px) { .main-layout { grid-template-columns: 1fr; } }
+        .card { background: var(--surface); padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; border-bottom: 2px solid var(--background); padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: var(--primary-hover); }
+        .btn-logout { width: auto; padding: 8px 16px; font-size: 0.9rem; background-color: var(--danger); }
+        .btn-logout:hover { background-color: #dc2626; }
+        table { width: 100%; border-collapse: collapse; background: var(--surface); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #f9fafb; }
+        .btn-delete { background-color: var(--danger); padding: 6px 12px; width: auto; font-size: 0.85rem; }
+        .btn-delete:hover { background-color: #dc2626; }
+        .btn-edit { background-color: #f59e0b; padding: 6px 12px; width: auto; font-size: 0.85rem; margin-right: 5px; }
+        .btn-edit:hover { background-color: #d97706; }
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal.show { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background-color: var(--surface); padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; width: 90%; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--background); padding-bottom: 10px; }
+        .modal-header h2 { margin: 0; }
+        .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; padding: 0; width: auto; }
+        .close-btn:hover { color: var(--text); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>🎓 Student Management System</h1>
+                <p>Procedural Architecture Implementation</p>
+            </div>
+            <div style="text-align: right;">
+                <p style="margin-bottom: 10px; color: #6b7280;">Welcome, <strong id="username">User</strong></p>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div style="margin-bottom: 20px;">
+        <a href="index.html" style="display: inline-block; padding: 10px 15px; margin-right: 10px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">Dashboard</a>
+        <a href="attendance.html" style="display: inline-block; padding: 10px 15px; margin-right: 10px; background-color: #e5e7eb; color: #1f2937; text-decoration: none; border-radius: 6px; font-weight: 500;">Attendance Report</a>
+        <a href="attendance_form.html" style="display: inline-block; padding: 10px 15px; margin-right: 10px; background-color: #e5e7eb; color: #1f2937; text-decoration: none; border-radius: 6px; font-weight: 500;">Quick Mark</a>
+        <a href="classes.html" style="display: inline-block; padding: 10px 15px; margin-right: 10px; background-color: #e5e7eb; color: #1f2937; text-decoration: none; border-radius: 6px; font-weight: 500;">Classes</a>
+        <a href="reports.html" style="display: inline-block; padding: 10px 15px; margin-right: 10px; background-color: #e5e7eb; color: #1f2937; text-decoration: none; border-radius: 6px; font-weight: 500;">Reports</a>
+    </div>
+
+    <!-- Dashboard Panel -->
+    <div class="card" style="background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); color: white; margin-bottom: 30px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: bold;" id="totalStudents">0</div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">Total Students</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: bold;" id="totalCourses">0</div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">Unique Courses</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 2.5rem; font-weight: bold;" id="lastAdded">--</div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">Last Added</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="card">
+            <h2>Add New Student</h2>
+            <form id="studentForm">
+                <div class="form-group"><label>Full Name</label><input type="text" id="name" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="email" required></div>
+                <div class="form-group"><label>Phone</label><input type="tel" id="phone" required></div>
+                <div class="form-group"><label>Course</label><input type="text" id="course" required></div>
+                <button type="submit">Register Student</button>
+            </form>
+        </div>
+
+        <div class="card" style="overflow-x: auto;">
+            <h2>Student Directory</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Course</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Student Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Student</h2>
+            <button class="close-btn" onclick="closeEditModal()">&times;</button>
+        </div>
+        <form id="editForm">
+            <input type="hidden" id="editStudentId">
+            <div class="form-group"><label>Full Name</label><input type="text" id="editName" required></div>
+            <div class="form-group"><label>Email</label><input type="email" id="editEmail" required></div>
+            <div class="form-group"><label>Phone</label><input type="tel" id="editPhone" required></div>
+            <div class="form-group"><label>Course</label><input type="text" id="editCourse" required></div>
+            <button type="submit">Update Student</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'api.php';
+
+    // Check if user is logged in
+    async function checkLogin() {
+        try {
+            const response = await fetch('login_api.php');
+            const result = await response.json();
+            
+            if (!result.logged_in) {
+                window.location.href = 'login.html';
+            } else {
+                document.getElementById('username').textContent = result.username;
+            }
+        } catch (error) {
+            console.error('Error checking login:', error);
+            window.location.href = 'login.html';
+        }
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            fetch('logout.php').then(() => {
+                window.location.href = 'login.html';
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        checkLogin();
+        fetchStudents();
+    });
+    document.getElementById('studentForm').addEventListener('submit', addStudent);
+
+    async function fetchStudents() {
+        try {
+            const response = await fetch(API_URL);
+            const students = await response.json();
+            const tableBody = document.getElementById('studentTableBody');
+            tableBody.innerHTML = '';
+
+            // Update dashboard
+            updateDashboard(students);
+
+            if(!students || students.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No student records found.</td></tr>`;
+                return;
+            }
+
+            students.forEach(student => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.id}</td>
+                    <td>${student.name}</td>
+                    <td>${student.email}</td>
+                    <td>${student.course}</td>
+                    <td><button class="btn-edit" onclick="openEditModal(${student.id}, '${student.name}', '${student.email}', '${student.phone}', '${student.course}')">Edit</button><button class="btn-delete" onclick="deleteStudent(${student.id})">Delete</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) { console.error('Error fetching records:', error); }
+    }
+
+    function updateDashboard(students) {
+        // Total students
+        document.getElementById('totalStudents').textContent = students.length;
+
+        // Unique courses
+        const courses = new Set(students.map(s => s.course));
+        document.getElementById('totalCourses').textContent = courses.size;
+
+        // Last added student (first in list since ordered by DESC)
+        if (students.length > 0) {
+            document.getElementById('lastAdded').textContent = students[0].name.split(' ')[0];
+        } else {
+            document.getElementById('lastAdded').textContent = '--';
+        }
+    }
+
+    async function addStudent(e) {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            course: document.getElementById('course').value
+        };
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.success);
+                document.getElementById('studentForm').reset();
+                fetchStudents();
+            } else { alert(result.error); }
+        } catch (error) { console.error('Error saving data:', error); }
+    }
+
+    async function deleteStudent(id) {
+        if (!confirm('Permanently remove this student record?')) return;
+        try {
+            const response = await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.success);
+                fetchStudents();
+            } else { alert(result.error); }
+        } catch (error) { console.error('Error removing record:', error); }
+    }
+
+    function openEditModal(id, name, email, phone, course) {
+        document.getElementById('editStudentId').value = id;
+        document.getElementById('editName').value = name;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editPhone').value = phone;
+        document.getElementById('editCourse').value = course;
+        document.getElementById('editModal').classList.add('show');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('show');
+        document.getElementById('editForm').reset();
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('editStudentId').value;
+        const payload = {
+            id: id,
+            name: document.getElementById('editName').value,
+            email: document.getElementById('editEmail').value,
+            phone: document.getElementById('editPhone').value,
+            course: document.getElementById('editCourse').value
+        };
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.success);
+                closeEditModal();
+                fetchStudents();
+            } else { alert(result.error); }
+        } catch (error) { console.error('Error updating data:', error); }
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('editModal');
+        if (event.target == modal) {
+            closeEditModal();
+        }
+    }
+</script>
+</body>
+</html>

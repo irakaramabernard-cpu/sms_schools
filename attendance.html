@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance - Student Management System</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --background: #f3f4f6;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--background); color: var(--text); padding: 20px; margin: 0; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        header h1 { margin: 0; }
+        .logout-btn { background-color: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .logout-btn:hover { background-color: #dc2626; }
+        .card { background: var(--surface); padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .attendance-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        @media (max-width: 768px) { .attendance-controls { grid-template-columns: 1fr; } }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input[type="date"], input[type="text"] { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
+        button { padding: 10px 20px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: #6b7280; }
+        .btn-secondary:hover { background-color: #4b5563; }
+        table { width: 100%; border-collapse: collapse; background: var(--surface); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #f9fafb; }
+        .checkbox-cell { text-align: center; }
+        input[type="checkbox"] { cursor: pointer; width: 18px; height: 18px; }
+        .status-present { background-color: #d1fae5; color: #065f46; padding: 4px 8px; border-radius: 4px; font-weight: 500; }
+        .status-absent { background-color: #fee2e2; color: #7f1d1d; padding: 4px 8px; border-radius: 4px; font-weight: 500; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a { display: inline-block; padding: 10px 15px; margin-right: 10px; background-color: #e5e7eb; color: var(--text); text-decoration: none; border-radius: 6px; font-weight: 500; }
+        .nav-links a:hover { background-color: var(--primary); color: white; }
+        .nav-links a.active { background-color: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>📋 Student Attendance</h1>
+        </div>
+        <div style="text-align: right;">
+            <p style="margin-bottom: 10px; color: #6b7280;">Welcome, <strong id="username">User</strong></p>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-links">
+        <a href="index.html">Dashboard</a>
+        <a href="attendance.html" class="active">Attendance Report</a>
+        <a href="attendance_form.html">Quick Mark</a>
+    </div>
+
+    <div class="card">
+        <h2>Mark Attendance</h2>
+        <div class="attendance-controls">
+            <div>
+                <label for="attendanceDate">Select Date:</label>
+                <input type="date" id="attendanceDate">
+            </div>
+            <div>
+                <label>&nbsp;</label>
+                <button onclick="loadAttendanceForDate()" style="width: 100%;">Load Students</button>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Course</th>
+                    <th class="checkbox-cell">Present</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceTableBody">
+            </tbody>
+        </table>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <button onclick="saveAttendance()" style="background-color: var(--success); padding: 12px 30px; font-size: 1rem;">Save Attendance</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Attendance Records</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="recordsTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const ATTENDANCE_API = 'attendance_api.php';
+
+    // Set today's date as default
+    document.addEventListener('DOMContentLoaded', () => {
+        checkLogin();
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('attendanceDate').value = today;
+        loadAttendanceForDate();
+        loadAttendanceRecords();
+    });
+
+    async function checkLogin() {
+        try {
+            const response = await fetch('login_api.php');
+            const result = await response.json();
+            
+            if (!result.logged_in) {
+                window.location.href = 'login.html';
+            } else {
+                document.getElementById('username').textContent = result.username;
+            }
+        } catch (error) {
+            console.error('Error checking login:', error);
+            window.location.href = 'login.html';
+        }
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            fetch('logout.php').then(() => {
+                window.location.href = 'login.html';
+            });
+        }
+    }
+
+    async function loadAttendanceForDate() {
+        const date = document.getElementById('attendanceDate').value;
+        if (!date) {
+            alert('Please select a date');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${ATTENDANCE_API}?action=get_attendance&date=${date}`);
+            const data = await response.json();
+
+            const tableBody = document.getElementById('attendanceTableBody');
+            tableBody.innerHTML = '';
+
+            if (!data.students || data.students.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No students found.</td></tr>';
+                return;
+            }
+
+            const attendanceMap = {};
+            if (data.attendance) {
+                data.attendance.forEach(record => {
+                    attendanceMap[record.student_id] = record.status;
+                });
+            }
+
+            data.students.forEach(student => {
+                const isPresent = attendanceMap[student.id] === 'present';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.id}</td>
+                    <td>${student.name}</td>
+                    <td>${student.email}</td>
+                    <td>${student.course}</td>
+                    <td class="checkbox-cell"><input type="checkbox" class="attendance-check" data-student-id="${student.id}" ${isPresent ? 'checked' : ''}></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error loading attendance:', error);
+        }
+    }
+
+    async function saveAttendance() {
+        const date = document.getElementById('attendanceDate').value;
+        if (!date) {
+            alert('Please select a date');
+            return;
+        }
+
+        const checks = document.querySelectorAll('.attendance-check');
+        const attendance = [];
+
+        checks.forEach(check => {
+            attendance.push({
+                student_id: check.dataset.studentId,
+                status: check.checked ? 'present' : 'absent'
+            });
+        });
+
+        try {
+            const response = await fetch(ATTENDANCE_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date, attendance })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert('Attendance saved successfully!');
+                loadAttendanceRecords();
+            } else {
+                alert(result.error || 'Error saving attendance');
+            }
+        } catch (error) {
+            console.error('Error saving attendance:', error);
+        }
+    }
+
+    async function loadAttendanceRecords() {
+        try {
+            const response = await fetch(`${ATTENDANCE_API}?action=get_records`);
+            const records = await response.json();
+
+            const tableBody = document.getElementById('recordsTableBody');
+            tableBody.innerHTML = '';
+
+            if (!records || records.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No attendance records found.</td></tr>';
+                return;
+            }
+
+            records.slice(0, 20).forEach(record => {
+                const row = document.createElement('tr');
+                const statusClass = record.status === 'present' ? 'status-present' : 'status-absent';
+                const statusText = record.status === 'present' ? '✓ Present' : '✗ Absent';
+                row.innerHTML = `
+                    <td>${record.student_name}</td>
+                    <td>${new Date(record.attendance_date).toLocaleDateString()}</td>
+                    <td><span class="${statusClass}">${statusText}</span></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error loading records:', error);
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Attendance - Student Management System</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --background: #f3f4f6;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: var(--background); 
+            color: var(--text); 
+            padding: 20px; 
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        header h1 { margin: 0; }
+        .logout-btn { background-color: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .logout-btn:hover { background-color: #dc2626; }
+        .card { background: var(--surface); padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a { display: inline-block; padding: 10px 15px; margin-right: 10px; background-color: #e5e7eb; color: var(--text); text-decoration: none; border-radius: 6px; font-weight: 500; }
+        .nav-links a:hover { background-color: var(--primary); color: white; }
+        .nav-links a.active { background-color: var(--primary); color: white; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
+        
+        button { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        button:hover { background-color: var(--primary-hover); }
+        
+        .btn-success { background-color: var(--success); }
+        .btn-success:hover { background-color: #059669; }
+        
+        .radio-group { margin-top: 10px; }
+        .radio-option { display: flex; align-items: center; margin-bottom: 10px; }
+        .radio-option input[type="radio"] { margin-right: 10px; width: auto; cursor: pointer; }
+        .radio-option label { margin: 0; }
+        
+        .status-message { padding: 15px; border-radius: 6px; margin-bottom: 20px; display: none; }
+        .status-success { background-color: #d1fae5; color: #065f46; border-left: 4px solid var(--success); }
+        .status-error { background-color: #fee2e2; color: #7f1d1d; border-left: 4px solid var(--danger); }
+        
+        .student-info { background-color: #f0f9ff; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: none; }
+        .student-info h3 { margin: 0 0 10px 0; color: var(--primary); }
+        .student-info p { margin: 5px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📝 Mark Attendance</h1>
+        <div style="text-align: right;">
+            <p style="margin-bottom: 10px; color: #6b7280;">Welcome, <strong id="username">User</strong></p>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-links">
+        <a href="index.html">Dashboard</a>
+        <a href="attendance.html">Attendance Report</a>
+        <a href="attendance_form.html" class="active">Quick Mark</a>
+    </div>
+
+    <div class="card">
+        <div id="statusMessage" class="status-message"></div>
+
+        <form id="attendanceForm">
+            <h2>Student Attendance Form</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="attendanceDate">Attendance Date</label>
+                    <input type="date" id="attendanceDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="studentSelect">Select Student</label>
+                    <select id="studentSelect" required onchange="loadStudentInfo()">
+                        <option value="">-- Choose Student --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="student-info" id="studentInfo">
+                <h3 id="studentName"></h3>
+                <p><strong>Email:</strong> <span id="studentEmail"></span></p>
+                <p><strong>Course:</strong> <span id="studentCourse"></span></p>
+            </div>
+
+            <div class="form-group">
+                <label>Attendance Status</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="presentRadio" name="attendance_status" value="present" required>
+                        <label for="presentRadio">✓ Present</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="absentRadio" name="attendance_status" value="absent">
+                        <label for="absentRadio">✗ Absent</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-success">Mark Attendance</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Today's Attendance Summary</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f9fafb;">
+                    <th style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb;">Student Name</th>
+                    <th style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb;">Status</th>
+                    <th style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb;">Time</th>
+                </tr>
+            </thead>
+            <tbody id="todaySummary">
+                <tr>
+                    <td colspan="3" style="padding: 12px 15px; text-align: center; color: #6b7280;">No attendance records for today yet.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const ATTENDANCE_API = 'attendance_api.php';
+    let studentsData = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        checkLogin();
+        
+        // Set today's date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('attendanceDate').value = today;
+        
+        // Set Present as default
+        document.getElementById('presentRadio').checked = true;
+        
+        // Load students
+        await loadStudents();
+        
+        // Load today's summary
+        loadTodaySummary();
+    });
+
+    document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await markAttendance();
+    });
+
+    async function checkLogin() {
+        try {
+            const response = await fetch('login_api.php');
+            const result = await response.json();
+            
+            if (!result.logged_in) {
+                window.location.href = 'login.html';
+            } else {
+                document.getElementById('username').textContent = result.username;
+            }
+        } catch (error) {
+            console.error('Error checking login:', error);
+            window.location.href = 'login.html';
+        }
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            fetch('logout.php').then(() => {
+                window.location.href = 'login.html';
+            });
+        }
+    }
+
+    async function loadStudents() {
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const response = await fetch(`${ATTENDANCE_API}?action=get_attendance&date=${today}`);
+            const data = await response.json();
+
+            if (!response.ok || !data.students) {
+                console.error('Error response:', data);
+                showMessage('Error loading students. Check console.', 'error');
+                return;
+            }
+
+            studentsData = data.students || [];
+            const select = document.getElementById('studentSelect');
+            select.innerHTML = '<option value="">-- Choose Student --</option>';
+
+            if (studentsData.length === 0) {
+                select.innerHTML += '<option disabled>No students found</option>';
+                return;
+            }
+
+            studentsData.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = `${student.name} (${student.course})`;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading students:', error);
+            showMessage('Error: ' + error.message, 'error');
+        }
+    }
+
+    function loadStudentInfo() {
+        const studentId = document.getElementById('studentSelect').value;
+        const studentInfo = document.getElementById('studentInfo');
+
+        if (!studentId) {
+            studentInfo.style.display = 'none';
+            return;
+        }
+
+        const student = studentsData.find(s => s.id == studentId);
+        if (student) {
+            document.getElementById('studentName').textContent = student.name;
+            document.getElementById('studentEmail').textContent = student.email;
+            document.getElementById('studentCourse').textContent = student.course;
+            studentInfo.style.display = 'block';
+        }
+    }
+
+    async function markAttendance() {
+        const date = document.getElementById('attendanceDate').value;
+        const studentId = document.getElementById('studentSelect').value;
+        const statusRadio = document.querySelector('input[name="attendance_status"]:checked');
+        const status = statusRadio ? statusRadio.value : null;
+
+        if (!date) {
+            showMessage('Please select a date', 'error');
+            return;
+        }
+        if (!studentId) {
+            showMessage('Please select a student', 'error');
+            return;
+        }
+        if (!status) {
+            showMessage('Please select attendance status (Present or Absent)', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(ATTENDANCE_API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    date: date,
+                    attendance: [{ student_id: studentId, status: status }]
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                showMessage('✓ Attendance marked successfully!', 'success');
+                document.getElementById('attendanceForm').reset();
+                document.getElementById('studentInfo').style.display = 'none';
+                document.getElementById('studentSelect').value = '';
+                // Re-check Present radio by default
+                document.getElementById('presentRadio').checked = true;
+                loadTodaySummary();
+            } else {
+                showMessage(result.error || 'Error marking attendance', 'error');
+            }
+        } catch (error) {
+            console.error('Error marking attendance:', error);
+            showMessage('Error: ' + error.message, 'error');
+        }
+    }
+
+    function showMessage(message, type) {
+        const statusDiv = document.getElementById('statusMessage');
+        statusDiv.textContent = message;
+        statusDiv.className = `status-message status-${type}`;
+        statusDiv.style.display = 'block';
+        
+        // Scroll to message
+        statusDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    async function loadTodaySummary() {
+        const today = new Date().toISOString().split('T')[0];
+        try {
+            const response = await fetch(`${ATTENDANCE_API}?action=get_records`);
+            const allRecords = await response.json();
+
+            const todayRecords = allRecords.filter(r => r.attendance_date === today);
+            const summaryBody = document.getElementById('todaySummary');
+
+            if (todayRecords.length === 0) {
+                summaryBody.innerHTML = '<tr><td colspan="3" style="padding: 12px 15px; text-align: center; color: #6b7280;">No attendance records for today yet.</td></tr>';
+                return;
+            }
+
+            summaryBody.innerHTML = '';
+            todayRecords.forEach(record => {
+                const row = document.createElement('tr');
+                const statusClass = record.status === 'present' ? 'color: #065f46;' : 'color: #7f1d1d;';
+                const statusText = record.status === 'present' ? '✓ Present' : '✗ Absent';
+                const time = record.created_at ? new Date(record.created_at).toLocaleTimeString() : '--:--:--';
+                row.innerHTML = `
+                    <td style="padding: 12px 15px; border-bottom: 1px solid #e5e7eb;">${record.student_name}</td>
+                    <td style="padding: 12px 15px; border-bottom: 1px solid #e5e7eb; ${statusClass}"><strong>${statusText}</strong></td>
+                    <td style="padding: 12px 15px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">${time}</td>
+                `;
+                summaryBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error loading summary:', error);
+            showMessage('Error loading summary: ' + error.message, 'error');
+        }
+    }
+</script>
+
+</body>
+</html>

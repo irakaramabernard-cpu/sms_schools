@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classes & Grades Management - Student Management System</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --background: #f3f4f6;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--background); color: var(--text); padding: 20px; margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        header h1 { margin: 0; }
+        .logout-btn { background-color: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .logout-btn:hover { background-color: #dc2626; }
+        .card { background: var(--surface); padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .nav-links { margin-bottom: 20px; }
+        .nav-links a { display: inline-block; padding: 10px 15px; margin-right: 10px; background-color: #e5e7eb; color: var(--text); text-decoration: none; border-radius: 6px; font-weight: 500; }
+        .nav-links a:hover { background-color: var(--primary); color: white; }
+        .nav-links a.active { background-color: var(--primary); color: white; }
+        h2 { margin-top: 0; border-bottom: 2px solid var(--background); padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
+        button { padding: 10px 20px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: var(--primary-hover); }
+        .btn-success { background-color: var(--success); }
+        .btn-success:hover { background-color: #059669; }
+        .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { background-color: #dc2626; }
+        table { width: 100%; border-collapse: collapse; background: var(--surface); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #f9fafb; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+        .badge-primary { background-color: #dbeafe; color: #1e40af; }
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+        .status-message { padding: 15px; border-radius: 6px; margin-bottom: 20px; display: none; }
+        .status-success { background-color: #d1fae5; color: #065f46; border-left: 4px solid var(--success); }
+        .status-error { background-color: #fee2e2; color: #7f1d1d; border-left: 4px solid var(--danger); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📚 Classes & Grades Management</h1>
+        <div style="text-align: right;">
+            <p style="margin-bottom: 10px; color: #6b7280;">Welcome, <strong id="username">User</strong></p>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="nav-links">
+        <a href="index.html">Dashboard</a>
+        <a href="attendance.html">Attendance Report</a>
+        <a href="classes.html" class="active">Classes</a>
+        <a href="reports.html">Reports</a>
+    </div>
+
+    <div id="statusMessage" class="status-message"></div>
+
+    <div class="grid-2">
+        <!-- Grade Management -->
+        <div class="card">
+            <h2>📖 All Grade Levels</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Grade Level</th>
+                        <th>Age Range</th>
+                        <th>Students</th>
+                    </tr>
+                </thead>
+                <tbody id="gradesTable">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Students by Grade -->
+        <div class="card">
+            <h2>👥 Filter by Grade</h2>
+            <div class="form-group">
+                <label for="gradeFilter">Select Grade Level</label>
+                <select id="gradeFilter" onchange="loadStudentsByGrade()">
+                    <option value="">-- All Grades --</option>
+                </select>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Email</th>
+                        <th>Course</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsByGradeTable">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📊 Class Statistics</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Grade Level</th>
+                    <th>Total Students</th>
+                    <th>Subjects Offered</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="classStatsTable">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>⚙️ Subjects by Grade</h2>
+        <div class="form-group">
+            <label for="subjectGradeFilter">Select Grade Level</label>
+            <select id="subjectGradeFilter" onchange="loadSubjectsByGrade()">
+                <option value="">-- Select Grade --</option>
+            </select>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject Name</th>
+                    <th>Subject Code</th>
+                </tr>
+            </thead>
+            <tbody id="subjectsTable">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const GRADE_LEVELS = {
+        'lower_primary': [
+            { id: 1, name: 'Lower Primary Grade 1', ageRange: '6-7 years' },
+            { id: 2, name: 'Lower Primary Grade 2', ageRange: '7-8 years' },
+            { id: 3, name: 'Lower Primary Grade 3', ageRange: '8-9 years' }
+        ],
+        'upper_primary': [
+            { id: 4, name: 'Upper Primary Grade 4', ageRange: '9-10 years' },
+            { id: 5, name: 'Upper Primary Grade 5', ageRange: '10-11 years' },
+            { id: 6, name: 'Upper Primary Grade 6', ageRange: '11-12 years' }
+        ],
+        'o_level': [
+            { id: 7, name: 'O-Level Grade 7', ageRange: '12-13 years' },
+            { id: 8, name: 'O-Level Grade 8', ageRange: '13-14 years' },
+            { id: 9, name: 'O-Level Grade 9', ageRange: '14-15 years' },
+            { id: 10, name: 'O-Level Grade 10', ageRange: '15-16 years' },
+            { id: 11, name: 'O-Level Grade 11', ageRange: '16-17 years' }
+        ],
+        'a_level': [
+            { id: 12, name: 'A-Level Grade 12', ageRange: '17-18 years' },
+            { id: 13, name: 'A-Level Grade 13', ageRange: '18-19 years' }
+        ]
+    };
+
+    const SUBJECTS_BY_GRADE = {
+        'Lower Primary Grade 1': ['Native Language', 'English', 'Mathematics', 'Environmental Studies', 'Art & PE'],
+        'Lower Primary Grade 2': ['Native Language', 'English', 'Mathematics', 'Environmental Studies', 'Art & PE'],
+        'Lower Primary Grade 3': ['Native Language', 'English', 'Mathematics', 'Science', 'Art & PE'],
+        'Upper Primary Grade 4': ['Native Language', 'English', 'Mathematics', 'Science', 'Social Studies', 'ICT', 'Art & PE'],
+        'Upper Primary Grade 5': ['Native Language', 'English', 'Mathematics', 'Science', 'Social Studies', 'ICT', 'Art & PE'],
+        'Upper Primary Grade 6': ['Native Language', 'English', 'Mathematics', 'Science', 'Social Studies', 'ICT', 'Art & PE'],
+        'O-Level Grade 7': ['English', 'Mathematics', 'Biology', 'Chemistry', 'Physics', 'History', 'Geography', 'ICT'],
+        'O-Level Grade 8': ['English', 'Mathematics', 'Biology', 'Chemistry', 'Physics', 'History', 'Geography', 'ICT'],
+        'O-Level Grade 9': ['English', 'Mathematics', 'Biology', 'Chemistry', 'Physics', 'History', 'Geography', 'ICT'],
+        'O-Level Grade 10': ['English', 'Mathematics', 'Biology', 'Chemistry', 'Physics', 'History', 'Geography', 'ICT', 'Business Studies'],
+        'O-Level Grade 11': ['English', 'Mathematics', 'Biology', 'Chemistry', 'Physics', 'History', 'Geography', 'Economics'],
+        'A-Level Grade 12': ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English Literature', 'History', 'Economics'],
+        'A-Level Grade 13': ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English Literature', 'History', 'Economics']
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        checkLogin();
+        loadGrades();
+        loadGradeFilters();
+    });
+
+    async function checkLogin() {
+        try {
+            const response = await fetch('login_api.php');
+            const result = await response.json();
+            
+            if (!result.logged_in) {
+                window.location.href = 'login.html';
+            } else {
+                document.getElementById('username').textContent = result.username;
+            }
+        } catch (error) {
+            console.error('Error checking login:', error);
+            window.location.href = 'login.html';
+        }
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            fetch('logout.php').then(() => {
+                window.location.href = 'login.html';
+            });
+        }
+    }
+
+    function loadGrades() {
+        const table = document.getElementById('gradesTable');
+        table.innerHTML = '';
+
+        let totalGrades = 0;
+        for (let category in GRADE_LEVELS) {
+            GRADE_LEVELS[category].forEach(grade => {
+                totalGrades++;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="badge badge-primary">${grade.name}</span></td>
+                    <td>${grade.ageRange}</td>
+                    <td><span class="badge badge-success">0 students</span></td>
+                `;
+                table.appendChild(row);
+            });
+        }
+    }
+
+    function loadGradeFilters() {
+        const select = document.getElementById('gradeFilter');
+        const subjectSelect = document.getElementById('subjectGradeFilter');
+
+        for (let category in GRADE_LEVELS) {
+            GRADE_LEVELS[category].forEach(grade => {
+                const option1 = document.createElement('option');
+                option1.value = grade.name;
+                option1.textContent = grade.name;
+                select.appendChild(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = grade.name;
+                option2.textContent = grade.name;
+                subjectSelect.appendChild(option2);
+            });
+        }
+    }
+
+    function loadStudentsByGrade() {
+        const gradeName = document.getElementById('gradeFilter').value;
+        const table = document.getElementById('studentsByGradeTable');
+        table.innerHTML = '';
+
+        if (!gradeName) {
+            table.innerHTML = '<tr><td colspan="3" style="text-align:center;">Select a grade level to view students</td></tr>';
+            return;
+        }
+
+        // This would normally fetch from API
+        table.innerHTML = '<tr><td colspan="3" style="text-align:center;">No students in this grade yet</td></tr>';
+    }
+
+    function loadSubjectsByGrade() {
+        const gradeName = document.getElementById('subjectGradeFilter').value;
+        const table = document.getElementById('subjectsTable');
+        table.innerHTML = '';
+
+        if (!gradeName) {
+            table.innerHTML = '<tr><td colspan="2" style="text-align:center;">Select a grade level to view subjects</td></tr>';
+            return;
+        }
+
+        const subjects = SUBJECTS_BY_GRADE[gradeName] || [];
+        if (subjects.length === 0) {
+            table.innerHTML = '<tr><td colspan="2" style="text-align:center;">No subjects defined for this grade</td></tr>';
+            return;
+        }
+
+        subjects.forEach((subject, index) => {
+            const row = document.createElement('tr');
+            const code = subject.substring(0, 3).toUpperCase() + (index + 1);
+            row.innerHTML = `
+                <td>${subject}</td>
+                <td>${code}</td>
+            `;
+            table.appendChild(row);
+        });
+    }
+
+    function loadClassStats() {
+        const table = document.getElementById('classStatsTable');
+        table.innerHTML = '';
+
+        for (let category in GRADE_LEVELS) {
+            GRADE_LEVELS[category].forEach(grade => {
+                const subjects = SUBJECTS_BY_GRADE[grade.name] || [];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${grade.name}</td>
+                    <td>0</td>
+                    <td>${subjects.length}</td>
+                    <td><button onclick="viewClassDetails('${grade.name}')">View</button></td>
+                `;
+                table.appendChild(row);
+            });
+        }
+    }
+
+    function viewClassDetails(gradeName) {
+        alert('Class details for: ' + gradeName);
+        // Could open a modal or redirect to detailed page
+    }
+
+    // Initialize stats
+    loadClassStats();
+</script>
+
+</body>
+</html>
